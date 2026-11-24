@@ -1,0 +1,36 @@
+# Dependências e builds
+node_modules/
+dist/
+
+# Dados de vendas e clientes: NUNCA vão pro git
+produtos.json
+vendas.json
+config.json
+*backup*.json
+antes-de-*.json
+*.anterior
+*.corrompido-*
+
+# Segredos
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+credentials*.json
+secrets*.json
+.npmrc
+
+# Claude Code e editores
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.mcp.json
+.vscode/
+.idea/
+
+# Temporários
+*.tmp
+*.lnk
+Thumbs.db

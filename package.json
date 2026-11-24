@@ -1,0 +1,27 @@
+{
+  "name": "blendsell",
+  "productName": "BlendSell",
+  "version": "1.0.0",
+  "description": "Controle de vendas e comissões: coloque o valor e veja na hora quanto você recebe",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test",
+    "icone": "electron scripts/gerar-icone.js",
+    "dist": "electron-builder --win portable"
+  },
+  "author": "Vitor",
+  "license": "ISC",
+  "build": {
+    "appId": "com.vitor.blendsell",
+    "productName": "BlendSell",
+    "files": ["main.js", "preload.js", "src/**/*", "renderer/**/*", "build/icone.png"],
+    "directories": { "output": "dist" },
+    "win": { "target": "portable", "icon": "build/icone.ico", "signExecutable": false },
+    "portable": { "artifactName": "BlendSell.exe" }
+  },
+  "devDependencies": {
+    "electron": "^45.3.3",
+    "electron-builder": "^26.18.0"
+  }
+}

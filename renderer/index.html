@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'">
+  <title>BlendSell</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bolha bolha-1" aria-hidden="true"></div>
+  <div class="bolha bolha-2" aria-hidden="true"></div>
+  <div class="bolha bolha-3" aria-hidden="true"></div>
+
+  <div class="layout" id="layout">
+    <nav class="glass menu" aria-label="Menu principal">
+      <div class="marca">
+        <div class="logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ff0d8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5L5 19"></path><circle cx="7" cy="7" r="2.5"></circle><circle cx="17" cy="17" r="2.5"></circle></svg>
+        </div>
+        <span class="marca-nome">BlendSell</span>
+      </div>
+
+      <button type="button" class="nav nav-on" data-tela="visao">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"></rect><rect x="14" y="3" width="7" height="5" rx="2"></rect><rect x="14" y="12" width="7" height="9" rx="2"></rect><rect x="3" y="16" width="7" height="5" rx="2"></rect></svg>
+        Visão geral
+      </button>
+      <button type="button" class="nav" data-tela="vendas">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18M16 10a4 4 0 0 1-8 0"></path></svg>
+        Vendas
+      </button>
+      <button type="button" class="nav" data-tela="produtos">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><path d="M3.3 7L12 12l8.7-5M12 22V12"></path></svg>
+        Produtos
+      </button>
+
+      <div class="espaco"></div>
+
+      <div class="card-dados">
+        <div class="card-dados-topo">
+          <span class="rotulo">Seus dados</span>
+          <span class="ponto-salvo" role="img" aria-label="Salvo neste computador" title="Salvo neste computador"></span>
+        </div>
+        <span class="forte" id="info-total">—</span>
+        <div class="divisor" aria-hidden="true"></div>
+        <div class="botoes-dados">
+          <button type="button" class="btn-dados" id="botao-exportar">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"></path></svg>
+            Backup
+          </button>
+          <button type="button" class="btn-dados" id="botao-restaurar">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V8M7 13l5-5 5 5M5 4h14"></path></svg>
+            Restaurar
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main id="conteudo" class="conteudo"></main>
+  </div>
+
+  <div class="fundo-modal" id="janela" hidden>
+    <form class="glass modal" id="janela-form" role="dialog" aria-modal="true" aria-labelledby="janela-titulo" novalidate>
+      <h2 id="janela-titulo"></h2>
+      <div id="janela-corpo" class="janela-corpo"></div>
+      <p class="modal-erro" id="janela-erro" role="alert" hidden></p>
+      <div class="linha-botoes" id="janela-botoes"></div>
+    </form>
+  </div>
+
+  <div class="rolagem" id="rolagem" aria-hidden="true"><div class="rolagem-traco" id="rolagem-traco"></div></div>
+  <div class="glass aviso" id="aviso" role="status" hidden></div>
+
+  <script src="comissao.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

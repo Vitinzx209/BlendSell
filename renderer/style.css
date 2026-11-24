@@ -1,0 +1,724 @@
+/* =====================================================================
+   VISUAL DO BLENDERCASH: vidro discreto
+   A cor aparece só onde importa: valores, barras e o botão principal.
+   ===================================================================== */
+
+/* ===== As fontes moram dentro do app (pasta fonts/), então funcionam sem internet =====
+   Cada fonte tem 2 arquivos: "latin" (letras comuns, incluindo ã, ç, é)
+   e "latin-ext" (letras de outras línguas). O navegador só baixa o que precisar. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("fonts/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("fonts/inter-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url("fonts/plus-jakarta-sans-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url("fonts/plus-jakarta-sans-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  --fonte-texto: "Inter", "Segoe UI", system-ui, sans-serif;               /* menu, listas, textos pequenos */
+  --fonte-titulo: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;  /* títulos e valores grandes */
+  --fundo: #0b0c10;
+  --texto: #ffffff;
+  --texto-suave: rgba(255, 255, 255, 0.68);
+  --verde: #7cf5d2;
+  --verde-claro: #9ff0d8;
+  --laranja-claro: #ffc6a6;
+  --vidro: rgba(255, 255, 255, 0.035);
+  --vidro-hover: rgba(255, 255, 255, 0.055);
+  --borda: rgba(255, 255, 255, 0.08);
+  --borda-hover: rgba(255, 255, 255, 0.16);
+  --raio: 12px;        /* cantos dos cards */
+  --raio-pequeno: 8px; /* cantos de botões, menu e etiquetas */
+  --mola: cubic-bezier(0.2, 0.9, 0.25, 1.2); /* movimento com um "pulinho" no fim */
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; } /* "escondido" sempre ganha de qualquer display */
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: var(--fonte-texto);
+  /* Números tabulares: todo algarismo tem a mesma largura,
+     então os valores ficam alinhados certinho nas colunas */
+  font-variant-numeric: tabular-nums;
+}
+
+body { overflow-x: hidden; }
+
+/* ===== Animação de abertura das páginas =====
+   Cada bloco entra deslizando da esquerda pra direita, um pouco depois do
+   anterior (o atraso vem do app.js em --atraso). "backwards" segura o bloco
+   escondido enquanto espera a vez dele, e depois solta (o hover continua normal). */
+@keyframes entrar-da-esquerda {
+  from { opacity: 0; transform: translateX(-36px); }
+  to   { opacity: 1; transform: none; }
+}
+.entrando {
+  animation: entrar-da-esquerda 720ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: var(--atraso, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .entrando { animation: none; }
+}
+
+/* ===== Barra de rolagem própria: um traço fino que flutua =====
+   A barra do Windows fica escondida. No lugar, o app.js desenha um traço
+   que só aparece quando você rola (ou chega o mouse na borda), desliza
+   suave até a posição certa e some sozinho depois de um segundo. */
+html, body, .modal { scrollbar-width: none; }
+::-webkit-scrollbar { display: none; }
+
+.rolagem {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 14px; z-index: 30;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.rolagem.visivel, .rolagem:hover, .rolagem.arrastando { opacity: 1; transition-duration: 0.18s; }
+.rolagem.sem-rolagem { display: none; }
+
+.rolagem-traco {
+  position: absolute; top: 8px; right: 4px;
+  width: 3px; min-height: 40px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.38);
+  will-change: transform;
+  cursor: grab;
+  transition: width 0.3s var(--mola), right 0.3s var(--mola), background 0.25s ease;
+}
+.rolagem:hover .rolagem-traco, .rolagem.arrastando .rolagem-traco { width: 6px; right: 3px; background: rgba(255, 255, 255, 0.6); }
+.rolagem.arrastando .rolagem-traco { background: rgba(124, 245, 210, 0.85); cursor: grabbing; }
+
+h1, h2, .marca-nome, .numero {
+  font-family: var(--fonte-titulo);
+}
+
+/* ===== As luzes do fundo: agora de uma cor só (verde-água) e bem mais fracas ===== */
+.bolha {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.bolha-1 { width: 640px; height: 640px; left: -180px; top: -200px; background: radial-gradient(circle, rgba(46, 214, 173, 0.16), rgba(46, 214, 173, 0) 68%); }
+.bolha-2 { width: 720px; height: 720px; right: -220px; top: 140px;  background: radial-gradient(circle, rgba(46, 214, 173, 0.10), rgba(46, 214, 173, 0) 68%); }
+.bolha-3 { width: 560px; height: 560px; left: 30%; bottom: -280px;  background: radial-gradient(circle, rgba(46, 214, 173, 0.08), rgba(46, 214, 173, 0) 68%); }
+
+/* ===== As luzes passeando pelo fundo =====
+   Cada bolha tem o seu "roteiro" (@keyframes) e o seu tempo, todos diferentes,
+   pra elas nunca andarem sincronizadas. "alternate" faz a bolha ir e voltar. */
+.bolha { will-change: transform; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate; }
+.bolha-1 { animation-name: passeio-1; animation-duration: 23s; }
+.bolha-2 { animation-name: passeio-2; animation-duration: 29s; }
+.bolha-3 { animation-name: passeio-3; animation-duration: 19s; }
+
+@keyframes passeio-1 {
+  0%   { transform: translate(0, 0) scale(1); }
+  35%  { transform: translate(38vw, 22vh) scale(1.18); }
+  70%  { transform: translate(12vw, 58vh) scale(0.9); }
+  100% { transform: translate(52vw, 40vh) scale(1.1); }
+}
+
+@keyframes passeio-2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  30%  { transform: translate(-30vw, 35vh) scale(0.88); }
+  65%  { transform: translate(-55vw, -10vh) scale(1.2); }
+  100% { transform: translate(-20vw, 20vh) scale(1); }
+}
+
+@keyframes passeio-3 {
+  0%   { transform: translate(0, 0) scale(1); }
+  40%  { transform: translate(-25vw, -45vh) scale(1.25); }
+  75%  { transform: translate(30vw, -30vh) scale(0.95); }
+  100% { transform: translate(10vw, -65vh) scale(1.15); }
+}
+
+/* ===== O VIDRO (discreto: quase sólido, borda fina e apagada) ===== */
+.glass {
+  position: relative;
+  overflow: hidden;
+  background: var(--vidro);
+  backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),  /* uma linha de luz bem fraquinha em cima */
+    0 12px 32px rgba(0, 0, 0, 0.25);          /* sombra leve */
+  transition: transform 0.45s var(--mola), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* ===== A luz que segue o ponteiro =====
+   O app.js diz onde o mouse está (--mx, --my). Aqui desenhamos um círculo
+   de luz nesse ponto. Ele só aparece quando o mouse está em cima. */
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.07), transparent 70%),
+    radial-gradient(520px circle at var(--mx, 50%) var(--my, 50%), rgba(124, 245, 210, 0.035), transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.glass:hover::after { opacity: 1; }
+
+/* ===== Efeitos de mouse nos cards ===== */
+.lift { cursor: pointer; }
+.lift:hover {
+  transform: translateY(-2px) scale(1.03);   /* zoom no card com o mouse em cima */
+  z-index: 2;                                 /* fica por cima dos vizinhos */
+  background: var(--vidro-hover);
+  border-color: var(--borda-hover);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 20px 44px rgba(0, 0, 0, 0.35);
+}
+.lift:active { transform: scale(1.05); transition-duration: 0.18s; } /* zoom maior ao apertar */
+
+/* Os painéis grandes também crescem, mas bem pouquinho (senão invadem a tela) */
+.painel:hover {
+  transform: scale(1.012);
+  z-index: 1;
+  border-color: var(--borda-hover);
+}
+
+/* ===== Botões ===== */
+.btn {
+  font: inherit;
+  cursor: pointer;
+  color: var(--texto);
+  border-radius: var(--raio-pequeno);
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.btn:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--borda-hover); }
+.btn:active { transform: scale(1.08); transition-duration: 0.15s; }
+
+/* O botão principal: SÓLIDO e de alto contraste, o ponto de destaque da tela */
+.btn-main {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: #04221a;
+  backdrop-filter: none;
+  box-shadow: 0 8px 24px rgba(124, 245, 210, 0.18);
+}
+.btn-main:hover { background: #a8fae3; border-color: #a8fae3; }
+.btn-main::after { display: none; } /* sem luz de mouse: ele já é claro */
+
+.btn-redondo { padding: 0; width: 44px; justify-content: center; }
+
+/* Botão de destaque DENTRO de um card: verde, mas sem competir com o "Importar extrato" sólido */
+.btn-destaque {
+  background: rgba(124, 245, 210, 0.12);
+  border-color: rgba(124, 245, 210, 0.45);
+  color: var(--verde-claro);
+  backdrop-filter: none;
+  padding: 10px 16px;
+  min-height: 42px;
+}
+.btn-destaque:hover { background: rgba(124, 245, 210, 0.2); border-color: rgba(124, 245, 210, 0.7); color: #fff; }
+.btn-destaque::after { display: none; }
+/* Título e botão sempre na mesma linha: se faltar espaço, quem quebra é o título */
+.painel-topo-com-botao { align-items: center; flex-wrap: nowrap; }
+.painel-topo-com-botao h2 { flex: 1 1 auto; min-width: 0; }
+.painel-topo-com-botao .btn { flex-shrink: 0; }
+.painel-estreito .btn-destaque { padding: 8px 12px; min-height: 38px; font-size: 14px; }
+
+/* Botão pequeno e discreto pra ações de cada linha (ex.: Remover uma conta fixa) */
+.btn-pequeno {
+  font-size: 13px; font-weight: 600;
+  padding: 6px 12px; min-height: 34px; gap: 6px;
+  color: var(--texto-suave);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: none;
+}
+.btn-pequeno svg { width: 14px; height: 14px; }
+.btn-pequeno:hover { color: var(--laranja-claro); border-color: rgba(255, 198, 166, 0.4); background: rgba(255, 138, 76, 0.08); }
+.btn-pequeno::after { display: none; }
+.btn:focus-visible, .nav:focus-visible, .campo:focus-visible, .link:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
+
+/* ===== Layout: menu + conteúdo ===== */
+.layout {
+  position: relative;
+  z-index: 1;
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.menu {
+  flex: 1 1 236px;
+  max-width: 260px;
+  min-width: 236px;
+  min-height: calc(100vh - 56px);
+  position: sticky;
+  top: 28px;
+  padding: 22px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.marca { display: flex; align-items: center; gap: 12px; padding: 4px 10px 22px; }
+.logo {
+  width: 38px; height: 38px; border-radius: var(--raio-pequeno);
+  background: rgba(124, 245, 210, 0.12);
+  border: 1px solid rgba(124, 245, 210, 0.35);
+  display: flex; align-items: center; justify-content: center;
+}
+.marca-nome { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+
+.nav {
+  font: inherit;
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 12px; border-radius: var(--raio-pequeno);
+  border: 0; background: transparent; text-align: left;
+  color: var(--texto-suave); font-size: 15px; cursor: pointer;
+  transition: background 0.25s ease, transform 0.3s var(--mola), color 0.2s;
+}
+.nav:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+.nav:active { transform: scale(1.06); }
+.nav-on { background: rgba(255, 255, 255, 0.07); color: #fff; }
+
+.espaco { flex-grow: 1; min-height: 40px; }
+/* ===== Card "Seus dados" no pé do menu: neutro, compacto, com botões de verdade ===== */
+.card-dados {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.card-dados-topo { display: flex; justify-content: space-between; align-items: center; }
+.card-dados .forte { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Pontinho verde = os dados estão salvos neste computador */
+.ponto-salvo { width: 8px; height: 8px; border-radius: 50%; background: var(--verde); box-shadow: 0 0 0 3px rgba(124, 245, 210, 0.15); }
+.divisor { height: 1px; background: rgba(255, 255, 255, 0.05); margin: 4px 0; }
+.botoes-dados { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.btn-dados {
+  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--texto);
+  background: #1a1d26; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--raio-pequeno);
+  min-height: 36px; padding: 0 2px; min-width: 0; white-space: nowrap;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.3s var(--mola);
+}
+.btn-dados svg { flex-shrink: 0; } /* o ícone nunca é espremido */
+.btn-dados:hover { background: #21252f; border-color: rgba(255, 255, 255, 0.16); }
+.btn-dados:active { transform: scale(1.06); }
+.btn-dados:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
+
+.conteudo { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+
+/* ===== Cabeçalho ===== */
+.cabecalho { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
+.titulo-bloco { display: flex; flex-direction: column; gap: 4px; }
+h1 { margin: 0; font-size: 40px; font-weight: 600; letter-spacing: -0.03em; }
+h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.botoes { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+/* ===== Textos ===== */
+.rotulo { font-size: 14px; color: var(--texto-suave); }
+.forte { font-size: 15px; font-weight: 600; }
+.destaque { font-size: 13px; color: var(--verde-claro); }
+.positivo { color: var(--verde-claro); }
+.negativo { color: var(--laranja-claro); }
+
+/* ===== Cards de resumo ===== */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.card { padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; }
+.numero { font-size: 34px; font-weight: 600; letter-spacing: -0.02em; }
+
+/* Saldo positivo/negativo: além do número colorido, o card ganha um fundo
+   e uma borda bem suaves na mesma cor */
+.card-positivo {
+  background: linear-gradient(160deg, rgba(34, 168, 132, 0.16), rgba(34, 168, 132, 0.04) 70%);
+  border-color: rgba(124, 245, 210, 0.3);
+}
+.card-positivo:hover { background: linear-gradient(160deg, rgba(34, 168, 132, 0.22), rgba(34, 168, 132, 0.06) 70%); border-color: rgba(124, 245, 210, 0.5); }
+.card-negativo {
+  background: linear-gradient(160deg, rgba(224, 112, 58, 0.16), rgba(224, 112, 58, 0.04) 70%);
+  border-color: rgba(255, 198, 166, 0.3);
+}
+.card-negativo:hover { background: linear-gradient(160deg, rgba(224, 112, 58, 0.22), rgba(224, 112, 58, 0.06) 70%); border-color: rgba(255, 198, 166, 0.5); }
+.saldo-positivo { color: #7cf5d2; }
+
+/* ===== Painéis (categorias, transações) ===== */
+.paineis { display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch; }
+.painel { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+.painel-estreito { flex: 1 1 340px; }
+.painel-largo { flex: 999 1 480px; min-width: 0; }
+.painel-topo { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 6px; gap: 12px; }
+
+.link {
+  font: inherit; font-size: 14px; color: var(--verde-claro);
+  background: none; border: 0; cursor: pointer; padding: 4px;
+}
+.link:hover { color: #fff; text-decoration: underline; }
+
+/* Categoria: sem caixinha em volta, só o texto e a barra direto no painel */
+.lista-categorias { display: flex; flex-direction: column; gap: 20px; padding-top: 4px; }
+.categoria { display: flex; flex-direction: column; gap: 8px; }
+.categoria-linha { display: flex; justify-content: space-between; font-size: 15px; gap: 12px; }
+.trilho { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+.barra { height: 100%; border-radius: 999px; transition: width 0.8s var(--mola); }
+
+/* Linha de transação */
+.transacao {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 150px 130px;
+  gap: 12px; align-items: center;
+  padding: 12px 12px; border-radius: var(--raio-pequeno); cursor: default;
+  transition: background 0.25s ease, transform 0.3s var(--mola);
+}
+.transacao + .transacao { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); } /* linha fininha entre elas */
+.transacao:hover { background: rgba(255, 255, 255, 0.04); }
+.transacao:active { transform: scale(1.02); }
+.transacao-desc { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.transacao-banco { font-size: 12px; color: var(--texto-suave); }
+.valor { text-align: right; font-weight: 600; }
+.etiqueta {
+  justify-self: start;
+  font-size: 13px; padding: 4px 9px; border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2); background: transparent;
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+/* Lista simples (regras, bancos) */
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.item { padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+.item-titulo { font-size: 16px; font-weight: 600; }
+.item .btn { align-self: flex-start; margin-top: 4px; } /* botão dentro de card: só do tamanho do texto */
+
+.vazio { padding: 40px 24px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+
+/* ===== Janelinha (modal) ===== */
+.fundo-modal {
+  position: fixed; inset: 0; z-index: 10;
+  background: rgba(3, 4, 8, 0.6);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.fundo-modal[hidden] { display: none; }
+.modal {
+  width: 100%; max-width: 520px; max-height: calc(100vh - 48px); overflow-y: auto;
+  padding: 28px; display: flex; flex-direction: column; gap: 14px; background: rgba(18, 20, 29, 0.96);
+}
+.modal p { margin: 0; overflow-wrap: anywhere; line-height: 1.5; }
+.modal::after { display: none; }
+.modal:hover { transform: none; }
+.janela-corpo { display: flex; flex-direction: column; }
+.modal-erro { color: var(--laranja-claro); font-size: 14px; }
+.linha-botoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; padding-top: 8px; }
+.espaco-flex { flex-grow: 1; }
+
+/* ===== Formulários ===== */
+.formulario { display: flex; flex-direction: column; gap: 14px; }
+.campo-grupo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.campo {
+  font: inherit; color: #fff; font-size: 15px; width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--raio-pequeno); padding: 11px 12px; min-height: 44px;
+  color-scheme: dark; /* o calendário do campo de data fica escuro */
+}
+.campo:hover { border-color: rgba(255, 255, 255, 0.24); }
+.campo option { background: #12141d; color: #fff; }
+.linha-dupla { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+
+/* Saída | Entrada */
+.segmento { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); }
+.segmento-opcao { position: relative; display: flex; }
+.segmento-opcao input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.segmento-opcao span {
+  flex: 1; text-align: center; padding: 10px; border-radius: var(--raio-pequeno);
+  color: var(--texto-suave); font-weight: 600; transition: background 0.2s, color 0.2s;
+}
+.segmento-opcao input:checked + span { background: rgba(255, 255, 255, 0.12); color: #fff; }
+.segmento-opcao input:focus-visible + span { outline: 2px solid var(--verde); outline-offset: 2px; }
+
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--verde); flex-shrink: 0; }
+
+.resumo-transacao { display: flex; flex-direction: column; gap: 4px; padding: 14px; border-radius: var(--raio-pequeno); background: rgba(255, 255, 255, 0.04); }
+.arquivo { margin: 0; overflow-wrap: anywhere; }
+
+.btn-perigo { color: var(--laranja-claro); border-color: rgba(255, 198, 166, 0.35); }
+.btn-perigo:hover { background: rgba(255, 138, 76, 0.14); border-color: rgba(255, 198, 166, 0.6); }
+
+/* ===== Peças novas das telas ===== */
+.dica { font-size: 13px; line-height: 1.5; margin-top: -4px; }
+.legenda { font-size: 13px; line-height: 1.45; }
+.pequena { font-size: 12px; }
+.neutro { color: var(--texto-suave); }
+.investido { color: #8ec5ff; } /* dinheiro guardado/investido: azul, nem gasto nem entrada */
+.total { padding: 10px 12px 0; }
+
+.alerta {
+  border-radius: var(--raio); padding: 12px 16px; font-size: 14px;
+  background: rgba(255, 138, 76, 0.1); border: 1px solid rgba(255, 198, 166, 0.3); color: #ffe2d1;
+}
+
+/* Barra do orçamento: verde (tranquilo), amarela (perto do teto), laranja (passou) */
+.barra-ok { background: var(--verde); }
+.barra-atencao { background: #f5d97c; }
+.barra-estourou { background: #ff8a4c; }
+
+/* A categoria é um botão (clicar abre o teto), mas com cara de linha */
+.categoria {
+  font: inherit; color: inherit; text-align: left; width: 100%;
+  background: none; border: 0; padding: 8px; margin: -8px; border-radius: var(--raio-pequeno);
+  cursor: pointer; transition: background 0.2s;
+}
+.categoria:hover { background: rgba(255, 255, 255, 0.04); }
+.categoria .categoria-linha span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.categoria .categoria-linha .forte { white-space: nowrap; font-size: 14px; }
+.barra-neutra { background: rgba(255, 255, 255, 0.35); } /* categoria sem teto: barra sem "significado" de cor */
+.categoria:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
+.lista-categorias { gap: 24px; }
+
+/* A linha de transação também é um botão (clicar abre a edição) */
+button.transacao {
+  font: inherit; color: inherit; text-align: left; width: 100%;
+  background: transparent; border: 0; cursor: pointer;
+}
+button.transacao:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
+.transacao-textos { display: flex; flex-direction: column; min-width: 0; }
+.previsao { opacity: 0.8; }
+.previsao .etiqueta { border-style: dashed; }
+.recorrente { grid-template-columns: 70px minmax(0, 1fr) auto 130px; }
+
+/* Barra de filtros */
+.filtros {
+  padding: 18px 20px;
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+.filtros::after { display: none; }
+.filtro-busca { grid-column: span 2; }
+
+/* Itens que são botões (tetos) */
+.item-botao { font: inherit; color: inherit; text-align: left; cursor: pointer; }
+
+/* ===== Insights ===== */
+.card-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tag {
+  font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 6px; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.tag-boa { color: #9ff0d8; background: rgba(34, 168, 132, 0.14); border-color: rgba(34, 168, 132, 0.35); }
+.tag-ruim { color: #ffc6a6; background: rgba(224, 112, 58, 0.14); border-color: rgba(224, 112, 58, 0.35); }
+.tag-neutra { color: var(--texto-suave); background: rgba(255, 255, 255, 0.05); }
+
+.lista-insights { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.insight { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: var(--raio-pequeno); background: rgba(255, 255, 255, 0.03); }
+.insight-icone { color: #f5d97c; flex-shrink: 0; margin-top: 1px; }
+.insight-texto { display: flex; flex-direction: column; gap: 3px; font-size: 14px; line-height: 1.45; }
+
+/* ===== Gráfico ===== */
+.painel-grafico::after { display: none; } /* sem luz do mouse: o gráfico tem o próprio hover */
+.painel-grafico:hover { transform: none; }
+.legenda-grafico { display: flex; gap: 16px; font-size: 13px; color: var(--texto-suave); }
+.legenda-item { display: inline-flex; align-items: center; gap: 6px; }
+.legenda-cor { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+.grafico-area { position: relative; width: 100%; min-height: 220px; }
+.grafico-area svg { display: block; }
+.grafico-area .eixo { fill: rgba(255, 255, 255, 0.5); font-size: 11px; font-family: var(--fonte-texto); }
+.grafico-area .eixo-destaque { fill: #fff; font-weight: 700; }
+.grafico-coluna { transition: fill 0.15s; }
+.grafico-alvo { cursor: pointer; }
+.grafico-barra { transition: opacity 0.2s ease; }
+.balao-titulo { grid-template-columns: 10px 1fr; color: var(--texto-suave); font-size: 12px; }
+.balao-total { font-family: var(--fonte-titulo); font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+.grafico-balao {
+  position: absolute; width: max-content; max-width: 240px; pointer-events: none; z-index: 3;
+  padding: 10px 12px; border-radius: var(--raio-pequeno);
+  background: rgba(18, 20, 29, 0.96); border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  display: flex; flex-direction: column; gap: 6px; font-size: 13px;
+}
+.balao-linha { display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: center; color: var(--texto-suave); }
+.balao-valor { color: #fff; font-weight: 600; }
+.grafico-tabela summary { cursor: pointer; font-size: 13px; color: var(--texto-suave); width: fit-content; }
+.grafico-tabela summary:hover { color: #fff; }
+.grafico-tabela table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+.grafico-tabela th, .grafico-tabela td { padding: 6px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); text-align: left; }
+.grafico-tabela th { color: var(--texto-suave); font-weight: 600; }
+.grafico-tabela .num { text-align: right; }
+
+/* ===== Resumo do ano ===== */
+.cards-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.grade-destaques { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.destaque-ano { gap: 6px; }
+.destaque-titulo { font-family: var(--fonte-titulo); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; overflow-wrap: anywhere; color: #fff; }
+.categoria-ano { display: flex; flex-direction: column; gap: 8px; }
+
+/* ===== Cadeado (tela da senha) ===== */
+.tela-cadeado { position: relative; z-index: 2; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.cadeado-caixa { width: 100%; max-width: 400px; padding: 32px; display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.cadeado-caixa::after { display: none; }
+.logo-grande { width: 54px; height: 54px; }
+.cadeado-titulo { font-size: 26px; }
+.cadeado-caixa p { margin: 0; }
+.cadeado-botao { justify-content: center; margin-top: 4px; }
+.btn-senha { width: 100%; justify-content: flex-start; padding: 0 10px; color: var(--texto-suave); }
+
+/* ===== Saldo nas contas (faixa da visão geral) ===== */
+.faixa-saldos { padding: 16px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
+.faixa-total { display: flex; flex-direction: column; gap: 2px; }
+.faixa-contas { display: flex; flex-wrap: wrap; gap: 8px 24px; flex: 1 1 auto; }
+.faixa-conta { display: flex; flex-direction: column; gap: 2px; }
+.faixa-saldos .btn-destaque { margin-left: auto; }
+
+/* ===== Sugestões de contas fixas ===== */
+.sugestao { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; padding: 12px; border-radius: var(--raio-pequeno); background: rgba(255, 255, 255, 0.03); }
+.sugestao .transacao-textos { flex: 1 1 220px; }
+.sugestao-acoes { display: flex; gap: 8px; }
+.btn-destaque-pequeno { padding: 6px 12px; min-height: 34px; font-size: 13px; }
+.btn-destaque-pequeno svg { width: 14px; height: 14px; }
+
+/* ===== Lembretes ===== */
+.faixa-lembretes { display: flex; flex-direction: column; gap: 8px; }
+.lembrete {
+  display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border-radius: var(--raio);
+  background: rgba(124, 245, 210, 0.07); border: 1px solid rgba(124, 245, 210, 0.25);
+}
+.lembrete-icone { color: var(--verde); flex-shrink: 0; margin-top: 1px; }
+
+/* ===== Calendário de gastos ===== */
+.painel-calendario::after { display: none; }
+.painel-calendario:hover { transform: none; }
+.legenda-quadrado { border-radius: 3px; }
+.calendario { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.calendario-cabeca { text-align: center; font-size: 12px; color: var(--texto-suave); padding-bottom: 2px; }
+.calendario-dia {
+  font: inherit; color: #fff; text-align: left; cursor: pointer;
+  min-height: 58px; padding: 6px 8px; border-radius: var(--raio-pequeno);
+  background: rgba(255, 255, 255, 0.05); border: 1px solid transparent;
+  display: flex; flex-direction: column; justify-content: space-between;
+  transition: transform 0.25s var(--mola), border-color 0.2s;
+}
+.calendario-dia:hover { border-color: rgba(255, 255, 255, 0.35); transform: scale(1.06); position: relative; z-index: 1; }
+.calendario-dia:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
+.calendario-numero { font-size: 12px; color: rgba(255, 255, 255, 0.75); }
+.calendario-valor { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.calendario-hoje { border-color: var(--verde); }
+.transacao-compacta { grid-template-columns: 56px minmax(0, 1fr) auto 110px; }
+
+/* Faturas */
+.numero-menor { font-size: 26px; }
+.fatura-aberta { border-color: rgba(124, 245, 210, 0.45); }
+.fatura-futura { opacity: 0.85; border-style: dashed; }
+
+/* ===== Aviso embaixo ===== */
+.aviso {
+  position: fixed; left: 50%; bottom: 28px; z-index: 20;
+  transform: translateX(-50%);
+  border-radius: var(--raio); padding: 14px 22px; font-size: 15px;
+  background: rgba(18, 20, 29, 0.92);
+  max-width: calc(100% - 48px);
+}
+.aviso[hidden] { display: none; }
+
+/* ===== Tela estreita ===== */
+@media (max-width: 760px) {
+  .menu { position: static; min-height: 0; max-width: none; }
+  .transacao, .recorrente { grid-template-columns: minmax(0, 1fr) 110px; }
+  .transacao .esconder-pequeno { display: none; }
+  .filtro-busca { grid-column: auto; }
+}
+
+/* ===== Quem prefere menos movimento no Windows ===== */
+@media (prefers-reduced-motion: reduce) {
+  .glass, .nav, .transacao, .btn, .barra { transition: none; }
+  .bolha { animation: none; }
+  .lift:hover, .lift:active, .painel:hover, .btn:active, .nav:active, .transacao:active { transform: none; }
+}
+
+/* =====================================================================
+   BLENDSELL: peças novas (calculadora, meta, produtos, detalhes da venda)
+   ===================================================================== */
+.calculadora { display: flex; flex-direction: column; gap: 18px; }
+.calc-campos { display: flex; flex-wrap: wrap; gap: 14px; }
+.calc-campos > .campo-grupo { flex: 1 1 150px; }
+.calc-campos > .calc-tipo { flex: 2 1 300px; }
+
+/* A faixa verde do "Você recebe": é a resposta do app, então é a coisa mais forte da tela */
+.calc-resultado {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 16px 20px; border-radius: var(--raio);
+  background: linear-gradient(160deg, rgba(34, 168, 132, 0.16), rgba(34, 168, 132, 0.04) 70%);
+  border: 1px solid rgba(124, 245, 210, 0.28);
+}
+.calc-textos { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.calc-valor {
+  font-family: var(--fonte-titulo); font-size: 36px; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--verde-claro); font-variant-numeric: tabular-nums;
+}
+.calc-detalhe { font-size: 13.5px; }
+.calc-resultado-modal .calc-valor { font-size: 30px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* Meta */
+.meta-linha { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0 10px; }
+.meta-linha .forte { font-family: var(--fonte-titulo); font-size: 20px; font-variant-numeric: tabular-nums; }
+.trilho-meta { height: 10px; }
+.meta-texto { display: block; margin-top: 12px; }
+
+/* Card de produto */
+.produto { min-height: 150px; }
+.produto-ganho { margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: 10px; border-top: 1px solid var(--borda); }
+.previa-comissao { font-size: 14px; color: var(--verde-claro); min-height: 20px; }
+
+/* Formulário de venda: 3 campos por linha */
+.linha-tripla { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+
+/* Detalhes de uma venda */
+.detalhes-venda { display: flex; flex-direction: column; border: 1px solid var(--borda); border-radius: var(--raio-pequeno); }
+.detalhe-linha { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; font-variant-numeric: tabular-nums; }
+.detalhe-linha + .detalhe-linha { border-top: 1px solid var(--borda); }
+.detalhe-linha:last-child .forte { color: var(--verde-claro); }
+
+/* Regras de comissão (tela Produtos) */
+.regras { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.regra { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: var(--raio-pequeno); border: 1px solid var(--borda); background: rgba(255, 255, 255, 0.02); }
+.regra-pct { font-family: var(--fonte-titulo); font-size: 24px; font-weight: 700; color: var(--verde-claro); font-variant-numeric: tabular-nums; }
+.regra-botao { font: inherit; color: inherit; text-align: left; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.regra-botao:hover { border-color: var(--verde-claro); background: rgba(255, 255, 255, 0.05); }
+.regra-botao:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
